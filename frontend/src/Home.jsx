@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import Footer from './Footer.jsx';
+import ShirtDesignerEntry from './modules/shirt-designer/components/ShirtDesignerEntry.jsx';
 import logo from '../assets/icons/logo.png';
 import heroLeft from '../assets/images/hero-left.png';
 import heroRight from '../assets/images/hero-right.png';
@@ -39,7 +40,10 @@ export default function Home() {
           <div className="hero__center">
             <h1 className="logo glitch" style={{ '--img': `url("${logo}")` }}><img src={logo} alt="INKRIOT" /></h1>
             <p className="slogan">Wear the chaos</p>
-            <a className="btn" href="#drop">Compra Ahora <span aria-hidden="true">→</span></a>
+            <div className="hero__actions">
+              <a className="btn" href="#drop">Compra Ahora <span aria-hidden="true">→</span></a>
+              <ShirtDesignerEntry />
+            </div>
           </div>
         </section>
         <section className="drop torn" id="drop">

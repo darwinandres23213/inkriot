@@ -3,20 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": ["backend/src/services/*"],
   "scripts": {
-    "dev": "node backend/src/server.js --dev",
+    "dev": "concurrently --kill-others --names imagenes,web \"npm run start --workspace @inkriot/shirt-designer\" \"node backend/src/server.js --dev\"",
     "build": "vite build",
-    "start": "node backend/src/server.js"
+    "start": "concurrently --kill-others --names imagenes,web \"npm run start --workspace @inkriot/shirt-designer\" \"node backend/src/server.js\"",
+    "test": "node --test",
+    "test:e2e": "npm run build && playwright test"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
   "dependencies": {
+    "concurrently": "^9.2.1",
     "express": "^5.1.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "three": "^0.185.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@vitejs/plugin-react": "^6.0.0",
     "vite": "^8.0.0"
   }
