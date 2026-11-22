@@ -1,8 +1,7 @@
 import { Vector3 } from 'three';
+import { SHIRT_SIZES } from './fitOptions.js';
 
-export const BODY_MODELS = ['Masculino', 'Femenino'];
-export const SHIRT_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
-export const DEFAULT_FIT = { model: 'Masculino', size: 'M' };
+export { BODY_MODELS, SHIRT_SIZES, DEFAULT_FIT } from './fitOptions.js';
 
 export function applyShirtFit(wardrobe, { model, size }) {
   const selected = wardrobe.children.find((body) => body.name === model);

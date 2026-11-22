@@ -6,7 +6,7 @@ export default function Header({ isLogin }) {
       <nav className="nav__links" aria-label="Principal">
         <a href="/#drop">Tienda</a>
         <a href="/#manifiesto">Acerca de</a>
-        <a href="/#lookbook">Lookbook</a>
+        <a className="nav__lookbook" href="/#lookbook">Lookbook</a>
       </nav>
       <a className="nav__logo glitch" href="/#top" aria-label="Inkriot, inicio" style={{ '--img': `url("${logo}")` }}>
         <img src={logo} alt="Inkriot" />

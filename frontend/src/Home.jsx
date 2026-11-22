@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import Footer from './Footer.jsx';
+import LookbookSection from './modules/lookbook/components/LookbookSection.jsx';
 import ShirtDesignerEntry from './modules/shirt-designer/components/ShirtDesignerEntry.jsx';
 import logo from '../assets/icons/logo.png';
 import heroLeft from '../assets/images/hero-left.png';
@@ -10,7 +11,7 @@ import shirtHakari from '../assets/images/product-shirt3.png';
 import manifestoModel from '../assets/images/manifesto-model.png';
 import manifestoEye from '../assets/images/manifesto-eye.png';
 
-const lookbook = [
+const dropProducts = [
   { image: shirtItadori, name: 'Camiseta Itadori' },
   { image: shirtToji, name: 'Camisa Toji' },
   { image: shirtHakari, name: 'Camiseta Hakari' },
@@ -52,12 +53,13 @@ export default function Home() {
             <p>La última colección<br />está aquí.<br />Cantidad limitada.<br />No te lo pierdas.</p>
             <a className="btn" href="#">Comprar el Drop <span aria-hidden="true">→</span></a>
           </div>
-          <ul className="drop__grid" id="lookbook">
-            {lookbook.map(({ image, name }) => (
+          <ul className="drop__grid">
+            {dropProducts.map(({ image, name }) => (
               <li key={name}><a href="#"><img src={image} alt={name} /></a></li>
             ))}
           </ul>
         </section>
+        <LookbookSection />
         <section className="manifesto torn" id="manifiesto">
           <img className="manifesto__model" src={manifestoModel} alt="Modelo con camiseta blanca No Fear" />
           <div className="manifesto__text">

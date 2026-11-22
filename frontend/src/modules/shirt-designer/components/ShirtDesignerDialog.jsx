@@ -1,11 +1,26 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalDialog } from '../../../shared/hooks/useModalDialog.js';
 import { MAX_LAYERS, useArtworkLayers } from '../hooks/useArtworkLayers.js';
-import { DEFAULT_FIT } from '../helpers/shirtFit.js';
-import ShirtPreview from './ShirtPreview.jsx';
+import { DEFAULT_FIT } from '../helpers/fitOptions.js';
 import FitControls from './FitControls.jsx';
 import ArtworkControls from './ArtworkControls.jsx';
 import PresetPicker from './PresetPicker.jsx';
+
+function PreviewNotice({ failed = false }) {
+  return (
+    <section className="designer-stage designer-stage--notice" aria-label="Vista de la camiseta" aria-busy={!failed}>
+      {failed ? <>
+        <p role="alert">No se pudo descargar el visor 3D.</p>
+        <button type="button" className="designer-small" onClick={() => window.location.reload()}>Recargar la página</button>
+      </> : <p role="status">Cargando camiseta…</p>}
+    </section>
+  );
+}
+
+const ShirtPreview = lazy(() => import('./ShirtPreview.jsx').catch(() => ({
+  default: () => <PreviewNotice failed />,
+})));
 
 const palette = [
   ['Blanco', '#ffffff'], ['Negro', '#202023'], ['Rojo', '#ae1727'],
@@ -13,7 +28,7 @@ const palette = [
 ];
 
 export default function ShirtDesignerDialog({ open, onDismiss }) {
-  const dialog = useRef(null);
+  const dialog = useModalDialog(open);
   const sceneRef = useRef(null);
   const [fit, setFit] = useState(DEFAULT_FIT);
   const [color, setColor] = useState('#ffffff');
@@ -26,14 +41,6 @@ export default function ShirtDesignerDialog({ open, onDismiss }) {
   const active = visibleLayers.find((layer) => layer.id === selected) ?? visibleLayers.at(-1);
   const colorName = palette.find(([, value]) => value === color)?.[0] || color.toUpperCase();
 
-  useLayoutEffect(() => {
-    if (!open) return;
-    const element = dialog.current;
-    const previous = document.body.style.overflow;
-    element.showModal();
-    document.body.style.overflow = 'hidden';
-    return () => { element.close(); document.body.style.overflow = previous; };
-  }, [open]);
   function dismiss() {
     cancelUpload();
     onDismiss();
@@ -67,9 +74,11 @@ export default function ShirtDesignerDialog({ open, onDismiss }) {
           <button type="button" className="designer-close" aria-label="Cerrar visualizador" onClick={dismiss}>×</button>
         </header>
         <div className="designer-layout">
-          {open && <ShirtPreview sceneRef={sceneRef} fit={fit} color={color} layers={layers} side={side} showSide={showSide}
-            onOrbit={setSide} active={active} move={Boolean(active && modeMove)} setMove={setMove}
-            onPosition={(position) => active && updateLayer(active.id, position)} />}
+          {open && <Suspense fallback={<PreviewNotice />}>
+            <ShirtPreview sceneRef={sceneRef} fit={fit} color={color} layers={layers} side={side} showSide={showSide}
+              onOrbit={setSide} active={active} move={Boolean(active && modeMove)} setMove={setMove}
+              onPosition={(position) => active && updateLayer(active.id, position)} />
+          </Suspense>}
           <section className="designer-panel" aria-label="Menú de edición">
             <div className="designer-fields">
               <FitControls fit={fit} onChange={setFit} />

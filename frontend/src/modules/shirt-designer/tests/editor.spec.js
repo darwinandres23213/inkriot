@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-async function openEditor(page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Visualizar camiseta 3D' }).click();
+const openDesignerButton = (page) => page.getByRole('button', { name: /personaliza tu camiseta/i });
+
+async function openEditor(page, url = '/') {
+  await page.goto(url);
+  await openDesignerButton(page).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   return page.locator('.designer-model canvas');
 }
@@ -54,6 +56,52 @@ async function setSlider(slider, value) {
   }, value);
   await expect(slider).toHaveValue(String(value));
 }
+
+test('el primer clic en desarrollo muestra la camiseta con la caché de Three.js caducada', async ({ page, baseURL }, testInfo) => {
+  const { createServer } = await import('vite');
+  const vite = await createServer({
+    cacheDir: testInfo.outputPath('vite-cache'),
+    server: { host: '127.0.0.1', port: 0, proxy: { '/api': baseURL } },
+    logLevel: 'error',
+  });
+  try {
+    await vite.listen();
+    await page.route(/\/deps\/three[^/]*\.js(?:\?|$)/, (route) => route.fulfill({ status: 504, body: 'Outdated Optimize Dep' }));
+    const canvas = await openEditor(page, `http://127.0.0.1:${vite.httpServer.address().port}/`);
+    await expect.poll(async () => (await inkBounds(canvas, 'white')).count).toBeGreaterThan(4000);
+    await page.getByRole('button', { name: 'Rojo', exact: true }).click();
+    await expect.poll(async () => (await inkBounds(canvas, 'red')).count).toBeGreaterThan(4000);
+  } finally {
+    await vite.close();
+  }
+});
+
+test('el modal abre durante la descarga del visor y permite recuperarse si la descarga falla', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  let release;
+  const pending = new Promise((resolve) => { release = resolve; });
+  await page.route(/\/ShirtPreview-[\w-]+\.js$/, async (route) => {
+    await pending;
+    await route.abort('failed');
+  }, { times: 1 });
+  const canvas = await openEditor(page);
+  const dialog = page.getByRole('dialog');
+  try {
+    await expect(dialog.getByRole('status')).toHaveText('Cargando camiseta…');
+    await expect(dialog.getByRole('radio', { name: 'Masculino' })).toBeChecked();
+  } finally {
+    release();
+  }
+  await expect(dialog.getByRole('alert')).toHaveText('No se pudo descargar el visor 3D.');
+  await page.keyboard.press('Escape');
+  await expect(openDesignerButton(page)).toBeFocused();
+  await openDesignerButton(page).click();
+  await Promise.all([page.waitForEvent('domcontentloaded'), dialog.getByRole('button', { name: 'Recargar la página' }).click()]);
+  await openDesignerButton(page).click();
+  await expect.poll(async () => (await inkBounds(canvas, 'white')).count).toBeGreaterThan(4000);
+  expect(errors).toEqual([]);
+});
 
 test('los dos modelos muestran cinco tallas distinguibles en la camiseta renderizada', async ({ page }) => {
   const errors = [];
@@ -126,7 +174,7 @@ test('conserva la selección hecha durante la carga y los estampados al cambiar 
   await expect(page.getByLabel('Imagen a editar')).toContainText('dorso.png');
   await expect(page.getByRole('slider', { name: 'Rotación' })).toHaveValue('35');
   await page.getByRole('button', { name: 'Cerrar visualizador' }).click();
-  await page.getByRole('button', { name: 'Visualizar camiseta 3D' }).click();
+  await openDesignerButton(page).click();
   await expect(radio('Masculino')).toBeChecked();
   await expect(radio('S')).toBeChecked();
   await expect(page.getByRole('button', { name: 'Espalda', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -151,7 +199,7 @@ test('abre el modelo blanco, cambia de color, gira, muestra el catálogo vacío 
   await page.getByRole('button', { name: 'Predeterminados' }).click();
   await expect(page.getByText('Todavía no hay diseños predeterminados.')).toBeVisible();
   await page.keyboard.press('Escape');
-  const launcher = page.getByRole('button', { name: 'Visualizar camiseta 3D' });
+  const launcher = openDesignerButton(page);
   await expect(launcher).toBeFocused();
   await launcher.click();
   await expect(page.getByRole('button', { name: 'Rojo', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -167,7 +215,7 @@ test('recupera el modelo al reabrir el editor después de una carga fallida', as
   await expect(page.getByRole('alert')).toContainText('No se pudo cargar la camiseta');
   await page.getByRole('button', { name: 'Rojo', exact: true }).click();
   await page.getByRole('button', { name: 'Cerrar visualizador' }).click();
-  await page.getByRole('button', { name: 'Visualizar camiseta 3D' }).click();
+  await openDesignerButton(page).click();
   await expect.poll(async () => (await inkBounds(canvas, 'red')).count).toBeGreaterThan(4000);
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
@@ -285,8 +333,9 @@ test('en móvil mantiene capas independientes, rechaza imágenes dañadas y llev
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('radio', { name: 'XXL', exact: true })).toBeChecked();
   await expect(canvas).toHaveAccessibleName('Camiseta 3D, modelo femenino, talla XXL');
-  await expect(page.getByRole('link', { name: 'Comprar camiseta' })).toBeInViewport();
-  await page.getByRole('link', { name: 'Comprar camiseta' }).click();
+  const buy = page.getByRole('dialog').getByRole('link', { name: /la quiero/i });
+  await expect(buy).toBeInViewport();
+  await buy.click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
 });

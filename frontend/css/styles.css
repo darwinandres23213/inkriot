@@ -94,7 +94,9 @@ ul{list-style:none}
 
 /* RESPONSIVE */
 @media(max-width:900px){
-  .nav{grid-template-columns:auto 1fr}.nav__links{display:none}.nav__contact{display:none}.nav__logo{display:block;width:clamp(96px,10vw,130px);transform:rotate(-3deg)}
+  .nav{grid-template-columns:auto 1fr auto;grid-template-areas:"brand links tools";column-gap:clamp(.65rem,3vw,2rem)}
+  .nav__links{grid-area:links;justify-self:end}.nav__links a:not(.nav__lookbook){display:none}
+  .nav__right{grid-area:tools}.nav__contact{display:none}.nav__logo{grid-area:brand;display:block;width:clamp(96px,10vw,130px);transform:rotate(-3deg)}
   .hero__img{max-width:50%;opacity:.55}
   .drop{grid-template-columns:1fr}
   .manifesto{grid-template-columns:1fr}.manifesto__model{max-height:340px}.manifesto__eye{display:none}

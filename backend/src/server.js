@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import { lookbook } from './routes/lookbook.js';
 import { shirtDesigner } from './routes/shirtDesigner.js';
 
 const app = express();
@@ -9,6 +10,7 @@ const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || '127.0.0.1';
 
 app.use('/api/shirt-designer', shirtDesigner);
+app.use('/api/lookbook', lookbook);
 app.use('/api', (_request, response) => {
   response.status(404).json({ error: 'Ruta de API no disponible.' });
 });

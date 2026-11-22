@@ -5,9 +5,9 @@
   "type": "module",
   "workspaces": ["backend/src/services/*"],
   "scripts": {
-    "dev": "concurrently --kill-others --names imagenes,web \"npm run start --workspace @inkriot/shirt-designer\" \"node backend/src/server.js --dev\"",
+    "dev": "concurrently --kill-others --names imagenes,lookbook,web \"npm run start --workspace @inkriot/shirt-designer\" \"npm run start --workspace @inkriot/lookbook\" \"node backend/src/server.js --dev\"",
     "build": "vite build",
-    "start": "concurrently --kill-others --names imagenes,web \"npm run start --workspace @inkriot/shirt-designer\" \"node backend/src/server.js\"",
+    "start": "concurrently --kill-others --names imagenes,lookbook,web \"npm run start --workspace @inkriot/shirt-designer\" \"npm run start --workspace @inkriot/lookbook\" \"node backend/src/server.js\"",
     "test": "node --test",
     "test:e2e": "npm run build && playwright test"
   },

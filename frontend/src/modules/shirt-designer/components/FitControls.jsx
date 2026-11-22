@@ -1,4 +1,4 @@
-import { BODY_MODELS, SHIRT_SIZES } from '../helpers/shirtFit.js';
+import { BODY_MODELS, SHIRT_SIZES } from '../helpers/fitOptions.js';
 
 function FitOptions({ legend, name, options, value, onChange }) {
   return (
